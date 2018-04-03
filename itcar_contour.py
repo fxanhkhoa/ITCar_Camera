@@ -20,6 +20,7 @@ ratio_turn = 0
 ratio_angle = 0.2
 
 cap = cv2.VideoCapture(0)
+
 #Motor Init
 motorleft = Motor(17, 27)
 motorright = Motor(4, 14)
@@ -145,8 +146,8 @@ while (state):
         else:
             print('on road')
             Speed(50,50)
-        
-    
+
+
     #cv2.imshow('frame',crop_img)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -154,4 +155,3 @@ while (state):
 SetAngle(45)
 cap.release()
 cv2.destroyAllWindows()
-    
