@@ -9,10 +9,10 @@ using namespace std;
 using namespace cv;
 
 RNG rng(12345);
- 
-int main( int argc, char** argv ) 
+
+int main( int argc, char** argv )
 {
-	VideoCapture cap("ITCar_Camera/line_video.mp4");
+	VideoCapture cap("line_video.mp4");
 	if (!cap.isOpened())
 		return -1;
 
@@ -34,19 +34,19 @@ int main( int argc, char** argv )
 		roi.y = 100;
 		roi.width = 600;
 		roi.height = 200;
-		
+
 		// Crop with ROI
 		crop_img = frame(roi);
 		cvtColor(crop_img, gray, COLOR_BGR2GRAY);
-		
+
 		GaussianBlur(gray, edges, Size(15,15), 1.5, 1.5);
-		
+
 		//Canny(edges, edges,0 ,30, 3);
-		
+
 		threshold(gray, thresh, 150, 255, THRESH_BINARY);
-		
+
 		findContours(thresh, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-		
+
 		if (contours.size() > 0)
 		{
 			Mat drawing = Mat::zeros( thresh.size(), CV_8UC3 );
@@ -55,14 +55,14 @@ int main( int argc, char** argv )
 				Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
 				drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
 			}
-		
-		
+
+
 		imshow("edges",edges);
 		imshow("frame",drawing);
 		}
 	}
 	catch(const std::exception& e) {}
 		if (waitKey(30) >= 0) break;
-	}  
+	}
 	return 0;
 }
