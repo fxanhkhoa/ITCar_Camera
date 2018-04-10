@@ -44,28 +44,27 @@ int main(int argc, char **argv) {
       crop_img = frame(roi);
       cvtColor(crop_img, gray, COLOR_BGR2GRAY);
 
-      GaussianBlur(gray, edges, Size(15, 15), 1.5, 1.5);
+      GaussianBlur(gray, gray, Size(15, 15), 1.5, 1.5);
 
-      threshold(gray, thresh, 150, 255, THRESH_BINARY);
+      // bitwise_not(gray, gray);
+
+      threshold(gray, thresh, 150, 255, THRESH_BINARY_INV);
 
       Canny(thresh, edges, 0, 30, 3);
 
       HoughLines(edges, lines, 1, CV_PI / 180, 100, 0, 0);
-      if (lines.size() > 0){
-          center = GetCenter(lines);
-          GetContours();
-      }
-      else
-      {
+      if (lines.size() > 0) {
+        center = GetCenter(lines);
+        GetContours();
+      } else {
         GetContours();
       }
       // circle(crop_img, Point(x0,y0), 2, Scalar(5,255,100), CV_FILLED, 8,
       // 0);
-      circle(crop_img, center, 3, Scalar(168 , 1, 170), CV_FILLED, 8,
-      0);
-      //imshow("canny", edges);
-      //imshow("vanishing", crop_img);
-      imshow("frame",thresh);
+      circle(crop_img, center, 3, Scalar(168, 1, 170), CV_FILLED, 8, 0);
+      // imshow("canny", edges);
+      // imshow("vanishing", crop_img);
+      imshow("frame", thresh);
     } catch (const std::exception &e) {
     }
     if (waitKey(30) >= 0)
@@ -77,7 +76,7 @@ int main(int argc, char **argv) {
 Point GetCenter(vector<Vec2f> lines) {
   double Centerx = 0;
   int count = 0;
-  cout <<"size:"<< lines.size()<< endl;
+  // cout <<"size:"<< lines.size()<< endl;
   for (size_t i = 0; i < lines.size() - 1; i++) {
     for (size_t j = i + 1; j < lines.size(); j++) {
       float rho1 = lines[i][0], theta1 = lines[i][1];
@@ -111,36 +110,49 @@ Point GetCenter(vector<Vec2f> lines) {
       line(crop_img, pt1, pt2, Scalar(0, 0, 255), 3, CV_AA);
     }
   }
-  cout<<"Count:"<<count<<endl;
+  // cout<<"Count:"<<count<<endl;
   return Point(Centerx / count, 50);
 }
 
-void GetContours()
-{
-  findContours(thresh, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+void GetContours() {
+  bool check_left, check_right;
+  findContours(thresh, contours, hierarchy, CV_RETR_TREE,
+               CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+  // cout << thresh.rows << " " << thresh.cols << endl;
+  if (contours.size() > 0) {
+    Mat drawing = Mat::zeros(thresh.size(), CV_8UC3);
+    for (int i = 0; i < contours.size(); i++) {
+      double area = contourArea(contours[i]);
+      double arclength = arcLength(contours[i], true);
+      // cout << i <<":" << area << " length:"<< arclength << " ";
+      // MatOfPoint2f contour2f = new MatOfPoint2f(contours.get(i).toArray());
 
-  if (contours.size() > 0)
-  {
-    Mat drawing = Mat::zeros( thresh.size(), CV_8UC3 );
-    for (int i = 0; i < contours.size(); i++)
-    {
-      double area = contourArea( contours[i]);
-      double arclength = arcLength(contours[i],true);
-      cout << i <<":" << area << " length:"<< arclength << " ";
-      //MatOfPoint2f contour2f = new MatOfPoint2f(contours.get(i).toArray());
+      // double perimeter = Imgproc.arcLength(contour2f, true);
+      // Found squareness equation on wiki...
+      // https://en.wikipedia.org/wiki/Shape_factor_(image_analysis_and_microscopy)
+      // double squareness = 4 * Math.PI * area / Math.pow(perimeter, 2);
 
-      //double perimeter = Imgproc.arcLength(contour2f, true);
-      //Found squareness equation on wiki...
-      //https://en.wikipedia.org/wiki/Shape_factor_(image_analysis_and_microscopy)
-      //double squareness = 4 * Math.PI * area / Math.pow(perimeter, 2);
-
-      //if (squareness )
-      //if ( hierarchy[i][4] == -1 ) {
-      Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-      drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
+      // if (squareness )
+      // if ( hierarchy[i][4] == -1 ) {
+      Scalar color =
+          Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+      // Check each point
+      check_left = false;
+      check_right = false;
+      for (int j = 0; j < contours[i].size(); j++) {
+        // cout<< i << ": "<< contours[i][j].x <<endl;
+        // circle(drawing,contours[i][j],1,cv::Scalar(0,0,255));
+        if ((contours[i][j].x < 296))
+          check_left = true;
+        else if (contours[i][j].x > 304)
+          check_right = true;
+      }
+      // cout << i <<" "<< dem <<endl;
+      if ((check_left) && (check_right))
+        drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
       //}
     }
-    cout <<endl;
+    cout << endl;
     imshow("Contours", drawing);
   }
 }

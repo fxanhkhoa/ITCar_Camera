@@ -1,2 +1,10 @@
-mainmake: main.cpp itcar_contours.cpp itcar_vanishingpoint_video.cpp
-	g++ itcar_vanishingpoint_video.cpp -o output `pkg-config --cflags --libs opencv`
+CC=g++
+CFLAGS=-g -Wall
+OPENCV = `pkg-config opencv --cflags --libs`
+LIBS=$(OPENCV)
+
+mainmake: ItcarVanishingpoint.cpp
+	$(CC) ItcarVanishingpoint.cpp -o output $(LIBS)
+
+clean:
+	rm -rf *o output
