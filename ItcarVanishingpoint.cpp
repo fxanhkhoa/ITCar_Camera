@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <stdlib.h>
+#include "TK1_DRIVER/Controller.h"
 
 using namespace std;
 using namespace cv;

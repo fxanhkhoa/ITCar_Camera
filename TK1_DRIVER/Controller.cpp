@@ -11,6 +11,11 @@ Controller::Controller() {
     pca9685->reset() ;
     pca9685->setPWMFrequency(50);
     sleep(1);
+    pca9685->setPWM(STEERING_CHANNEL, 0, (servoMax - servoMin) / 2);
+    pca9685->setPWM(MOTOR_LEFT_IN1, 0, 0);
+    pca9685->setPWM(MOTOR_LEFT_IN2, 0, 0);
+    pca9685->setPWM(MOTOR_RIGHT_IN1, 0, 0);
+    pca9685->setPWM(MOTOR_RIGHT_IN2, 0, 0);
 }
 
 Controller::~Controller() {}
@@ -19,6 +24,45 @@ void Controller::Speed(int left, int right) {
   int real_left = ((left * multiplier) / 100) * ratio;
   int real_right = ((right * multiplier) / 100) * ratio;
 
+  if (real_left < 0)
+  {
+    pca9685->setPWM(MOTOR_LEFT_IN1, 0, 0);
+    pca9685->setPWM(MOTOR_LEFT_IN2, 0, -real_left);
+  }
+  else
+  {
+    pca9685->setPWM(MOTOR_LEFT_IN1, 0, real_left);
+    pca9685->setPWM(MOTOR_LEFT_IN2, 0, 0);
+  }
+
+  if (real_right < 0)
+  {
+    pca9685->setPWM(MOTOR_RIGHT_IN1, 0, 0);
+    pca9685->setPWM(MOTOR_RIGHT_IN2, 0, -real_right);
+  }
+  else
+  {
+    pca9685->setPWM(MOTOR_RIGHT_IN1, 0, real_right);
+    pca9685->setPWM(MOTOR_RIGHT_IN2, 0, 0);
+  }
+}
+
+void Controller::Handle(int angle)
+{
+  int percentage = (angle * 100) / 90;
+  int angle_pwm;
+  if (percentage < 0)
+  {
+    angle_pwm = (-percentage) * ((servoMax - servoMin) / 2);
+    angle_pwm = ((servoMax - servoMin) / 2) - angle_pwm;
+    pca9685->setPWM(STEERING_CHANNEL, 0, angle_pwm);
+  }
+  else
+  {
+    angle_pwm = (percentage) * ((servoMax - servoMin) / 2);
+    angle_pwm = ((servoMax - servoMin) / 2) + angle_pwm;
+    pca9685->setPWM(STEERING_CHANNEL, 0, angle_pwm);
+  }
 }
 
 void Controller::Initialize() {}
