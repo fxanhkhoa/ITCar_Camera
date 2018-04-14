@@ -1,4 +1,5 @@
 #include "Controller.h"
+#include <stdio.h>
 
 Controller::Controller() {
   pca9685 = new PCA9685();
@@ -9,13 +10,10 @@ Controller::Controller() {
     printf("PCA9685 Device Address: 0x%02X\n",pca9685->kI2CAddress) ;
     pca9685->setAllPWM(0,0) ;
     pca9685->reset() ;
-    pca9685->setPWMFrequency(50);
+    pca9685->setPWMFrequency(60);
     sleep(1);
     pca9685->setPWM(STEERING_CHANNEL, 0, (servoMax - servoMin) / 2);
-    pca9685->setPWM(MOTOR_LEFT_IN1, 0, 0);
-    pca9685->setPWM(MOTOR_LEFT_IN2, 0, 0);
-    pca9685->setPWM(MOTOR_RIGHT_IN1, 0, 0);
-    pca9685->setPWM(MOTOR_RIGHT_IN2, 0, 0);
+    Speed(0,0);
 }
 
 Controller::~Controller() {}
@@ -53,13 +51,14 @@ void Controller::Handle(int angle)
   int angle_pwm;
   if (percentage < 0)
   {
-    angle_pwm = (-percentage) * ((servoMax - servoMin) / 2);
+    angle_pwm = ((-percentage) * ((servoMax - servoMin) / 2))/100;
     angle_pwm = ((servoMax - servoMin) / 2) - angle_pwm;
+	//cout<<angle_pwm;
     pca9685->setPWM(STEERING_CHANNEL, 0, angle_pwm);
   }
   else
   {
-    angle_pwm = (percentage) * ((servoMax - servoMin) / 2);
+    angle_pwm = ((percentage) * ((servoMax - servoMin) / 2))/100;
     angle_pwm = ((servoMax - servoMin) / 2) + angle_pwm;
     pca9685->setPWM(STEERING_CHANNEL, 0, angle_pwm);
   }

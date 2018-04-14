@@ -12,9 +12,11 @@ RNG rng(12345);
 
 int main( int argc, char** argv )
 {
-	VideoCapture cap("line_video.mp4");
-	if (!cap.isOpened())
+	VideoCapture cap(0);
+	if (!cap.isOpened()){
+		cout<<"error";
 		return -1;
+	}
 
 	Mat edges, crop_img, gray, thresh;
 	vector<vector<Point> > contours;

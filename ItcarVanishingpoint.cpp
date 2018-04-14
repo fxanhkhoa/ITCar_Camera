@@ -22,7 +22,7 @@ vector<Vec2f> lines;
 Point center;
 
 int main(int argc, char **argv) {
-  VideoCapture cap("videos/Line1.mp4");
+  VideoCapture cap(0);
   if (!cap.isOpened())
     return -1;
 

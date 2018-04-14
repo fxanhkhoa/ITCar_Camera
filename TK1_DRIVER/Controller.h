@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "JHPWMPCA9685.h"
+#include <stdio.h>
 
 #define ratio 0.5
 #define multiplier 4096
@@ -19,14 +20,15 @@
 #define MOTOR_RIGHT_IN1  6
 #define MOTOR_RIGHT_IN2  7
 
+using namespace std;
 
 class Controller
 {
 public:
   PCA9685 *pca9685;
   int err;
-  int servoMin = 120 * 2 ;
-  int servoMax = 720 / 2;
+  int servoMin = 120  ;
+  int servoMax = 720 ;
 
   Controller();
   ~Controller() ;
