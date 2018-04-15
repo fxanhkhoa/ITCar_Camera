@@ -40,16 +40,16 @@ int main()
 		gpioGetValue(BTN1, &value);
 		if (value == low){
 			_Controller->Speed(100,100);
-			_Controller->Handle(45);
+			_Controller->Handle(90);
 		}
 		gpioGetValue(BTN2, &value);
 		if (value == low){
-			_Controller->Handle(90);
+			_Controller->Handle(-90);
 			_Controller->Speed(0,0);
 		}
 	}
 	
-	cout << "GPIO example finished." << endl;
+	cout << "End" << endl;
 	gpioUnexport(BTN1);
     	gpioUnexport(BTN2);
 	gpioUnexport(BTN3);

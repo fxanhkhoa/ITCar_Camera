@@ -10,9 +10,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include "JHPWMPCA9685.h"
-#include <stdio.h>
+#include <iostream>
+
+using namespace std;
 
 #define ratio 0.5
+#define angle_ratio 0.5
 #define multiplier 4096
 #define STEERING_CHANNEL 0
 #define MOTOR_LEFT_IN1  4
@@ -27,7 +30,7 @@ class Controller
 public:
   PCA9685 *pca9685;
   int err;
-  int servoMin = 120  ;
+  int servoMin = 120 ;
   int servoMax = 720 ;
 
   Controller();
