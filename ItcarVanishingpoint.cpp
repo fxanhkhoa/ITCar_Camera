@@ -20,17 +20,18 @@ vector<vector<Point> > contours;
 vector<Vec4i> hierarchy;
 vector<Vec2f> lines;
 Point center;
+Mat frame;
 
 int main(int argc, char **argv) {
   VideoCapture cap(0);
   if (!cap.isOpened())
     return -1;
 
-  namedWindow("edges", 1);
+  //namedWindow("edges", 1);
 
   for (;;) {
     try {
-      Mat frame;
+      
       cap >> frame;
       resize(frame, frame, Size(800, 600));
       // Set region

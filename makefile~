@@ -4,7 +4,7 @@ OPENCV = `pkg-config opencv --cflags --libs`
 LIBS=$(OPENCV)
 
 mainmake: ItcarVanishingpoint.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp
-	$(CC) itcar_contours.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp -o output $(LIBS)
+	$(CC) ItcarVanishingpoint.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp -o output $(LIBS)
 	@echo 'done'
 
 
@@ -14,6 +14,11 @@ testmotor: test_motor.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp 
 
 testcam: main.cpp
 	$(CC) main.cpp -o testcam $(LIBS)
+
+autocar:main_autocar.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp TK1_DRIVER/jetsonGPIO.c
+	$(CC) main_autocar.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp TK1_DRIVER/jetsonGPIO.c -I TK1_DRIVER -o autocar $(LIBS)
+	@echo 'done'
+	
 
 clean:
 	rm -rf *o output

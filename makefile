@@ -15,5 +15,10 @@ testmotor: test_motor.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp 
 testcam: main.cpp
 	$(CC) main.cpp -o testcam $(LIBS)
 
+autocar:main_autocar.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp TK1_DRIVER/jetsonGPIO.c
+	$(CC) main_autocar.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp TK1_DRIVER/jetsonGPIO.c -I TK1_DRIVER -o autocar $(LIBS)
+	@echo 'done'
+	
+
 clean:
-	rm -rf *o output
+	rm -rf *o output testcam testmotor autocar
