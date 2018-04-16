@@ -1,5 +1,7 @@
 #include "Controller.h"
 
+#define DEBUG 0
+
 Controller::Controller() {
   pca9685 = new PCA9685();
   err = pca9685->openPCA9685();
@@ -52,16 +54,20 @@ void Controller::Handle(int angle)
   if (percentage < 0)
   {
     angle_pwm = ((-percentage) * ((servoMax - servoMin) / 2))/100;
+	#if (DEBUG)
 	cout <<angle_pwm<<endl;
+	#endif
     angle_pwm = ((servoMax - servoMin) / 2 + servoMin) - (angle_pwm * angle_ratio);
+	#if (DEBUG)
 	cout<<angle_pwm;
+	#endif
     pca9685->setPWM(STEERING_CHANNEL, 0, angle_pwm);
   }
   else
   {
     angle_pwm = ((percentage) * ((servoMax - servoMin) / 2))/100;
     angle_pwm = ((servoMax - servoMin) / 2 + servoMin) + (angle_pwm * angle_ratio);
-	cout<<angle_pwm;
+	//cout<<angle_pwm;
     pca9685->setPWM(STEERING_CHANNEL, 0, angle_pwm);
   }
 }

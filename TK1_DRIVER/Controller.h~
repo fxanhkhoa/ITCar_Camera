@@ -23,6 +23,8 @@ using namespace std;
 #define MOTOR_RIGHT_IN1  6
 #define MOTOR_RIGHT_IN2  7
 
+#define DEBUG 
+
 using namespace std;
 
 class Controller

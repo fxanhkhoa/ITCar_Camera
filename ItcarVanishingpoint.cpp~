@@ -22,7 +22,7 @@ vector<Vec2f> lines;
 Point center;
 
 int main(int argc, char **argv) {
-  VideoCapture cap("videos/Line1.mp4");
+  VideoCapture cap(0);
   if (!cap.isOpened())
     return -1;
 
@@ -63,12 +63,12 @@ int main(int argc, char **argv) {
       // circle(crop_img, Point(x0,y0), 2, Scalar(5,255,100), CV_FILLED, 8,
       // 0);
       circle(crop_img, center, 3, Scalar(168, 1, 170), CV_FILLED, 8, 0);
-      // imshow("canny", edges);
-      // imshow("vanishing", crop_img);
+      imshow("frame", frame);
+      imshow("vanishing", crop_img);
       imshow("frame", thresh);
     } catch (const std::exception &e) {
     }
-    if (waitKey(30) >= 0)
+    if (waitKey(30) == 27)
       break;
   }
   return 0;
