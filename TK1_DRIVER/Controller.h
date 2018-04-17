@@ -15,7 +15,7 @@
 using namespace std;
 
 #define ratio 0.5
-#define angle_ratio 0.5
+#define angle_ratio 0.6
 #define multiplier 4096
 #define STEERING_CHANNEL 0
 #define MOTOR_LEFT_IN1  4

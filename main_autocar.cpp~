@@ -17,6 +17,8 @@
 using namespace std;
 using namespace cv;
 
+#define MODE_CONTOUR  1
+
 /******** Prototype ***********/
 Point GetCenter(vector<Vec2f> lines);
 void GetContours();
@@ -32,6 +34,8 @@ vector<vector<Point> > contours;
 vector<Vec4i> hierarchy;
 vector<Vec2f> lines;
 Point center;
+int mode = 0;
+Mat frame;
 /*------ End Variables -------*/
 
 int main(int argc, char **argv)
@@ -41,14 +45,15 @@ int main(int argc, char **argv)
 	jetsonGPIONumber BTN3 = gpio163;
 	jetsonGPIONumber BTN4 = gpio164;
 	gpioExport(BTN1);
-    	gpioExport(BTN2);
+  gpioExport(BTN2);
 	gpioExport(BTN3);
 	gpioExport(BTN4);
-    	gpioSetDirection(BTN1,inputPin);
+  gpioSetDirection(BTN1,inputPin);
 	gpioSetDirection(BTN2,inputPin);
 	gpioSetDirection(BTN3,inputPin);
 	gpioSetDirection(BTN4,inputPin);
 
+  VideoCapture cap(0);
 	Controller *_Controller = new Controller();
 
 	// Wait for the push button to be pressed
@@ -56,65 +61,34 @@ int main(int argc, char **argv)
 
 	unsigned int value = high;
 
-	VideoCapture cap(0);
-        if (!cap.isOpened())
-        return -1;
+    if (!cap.isOpened())
+      return -1;
 
-	while(getkey() != 27) {
+	while(1) {
 		gpioGetValue(BTN1, &value);
 		if (value == low){
-			_Controller->Speed(100,100);
-			_Controller->Handle(90);
-			//mode_contour();
+			//_Controller->Speed(100,100);
+			//_Controller->Handle(90);
+			mode = MODE_CONTOUR;
 		}
 		gpioGetValue(BTN2, &value);
 		if (value == low){
 			_Controller->Handle(-90);
 			_Controller->Speed(0,0);
 		}
-		namedWindow("edges", 1);
-		try {
-      Mat frame;
+    if (mode == MODE_CONTOUR){
       cap >> frame;
-      resize(frame, frame, Size(800, 600));
-      // Set region
-
-      Rect roi;
-      roi.x = 100;
-      roi.y = 200;
-      roi.width = 600;
-      roi.height = 200;
-
-      // Crop with ROI
-      crop_img = frame(roi);
-      cvtColor(crop_img, gray, COLOR_BGR2GRAY);
-
-      GaussianBlur(gray, gray, Size(15, 15), 1.5, 1.5);
-
-      // bitwise_not(gray, gray);
-
-      threshold(gray, thresh, 150, 255, THRESH_BINARY_INV);
-
-      Canny(thresh, edges, 0, 30, 3);
-
-      HoughLines(edges, lines, 1, CV_PI / 180, 100, 0, 0);
-      if (lines.size() > 0) {
-        //center = GetCenter(lines);
-        GetContours();
-      }
-      // circle(crop_img, Point(x0,y0), 2, Scalar(5,255,100), CV_FILLED, 8,
-      // 0);
-      //circle(crop_img, center, 3, Scalar(168, 1, 170), CV_FILLED, 8, 0);
-      imshow("frame", frame);
-      //imshow("vanishing", crop_img);
-      imshow("frame", thresh);
-    } catch (const std::exception &e) {
+      mode_contour();
     }
+  
+
+    if (waitKey(30) == 27)
+      break;
 	}
 	
 	cout << "End" << endl;
 	gpioUnexport(BTN1);
-    	gpioUnexport(BTN2);
+  gpioUnexport(BTN2);
 	gpioUnexport(BTN3);
 	gpioUnexport(BTN4);
 	_Controller->Speed(0,0);
@@ -122,17 +96,9 @@ int main(int argc, char **argv)
 
 int mode_contour()
 {
-  VideoCapture cap(0);
-  if (!cap.isOpened())
-    return -1;
-
-  namedWindow("edges", 1);
-
-  for (;;) {
     try {
-      Mat frame;
-      cap >> frame;
       resize(frame, frame, Size(800, 600));
+      
       // Set region
 
       Rect roi;
@@ -151,22 +117,18 @@ int mode_contour()
 
       threshold(gray, thresh, 150, 255, THRESH_BINARY_INV);
 
-      Canny(thresh, edges, 0, 30, 3);
+      //Canny(thresh, edges, 0, 30, 3);
 
-      HoughLines(edges, lines, 1, CV_PI / 180, 100, 0, 0);
-      if (lines.size() > 0) {
-        //center = GetCenter(lines);
-        GetContours();
-      }
+      GetContours();
+      
       // circle(crop_img, Point(x0,y0), 2, Scalar(5,255,100), CV_FILLED, 8,
       // 0);
       //circle(crop_img, center, 3, Scalar(168, 1, 170), CV_FILLED, 8, 0);
-      imshow("frame", frame);
+      //imshow("frame1", frame);
       //imshow("vanishing", crop_img);
       imshow("frame", thresh);
     } catch (const std::exception &e) {
     }
-  }
   return 0;
 }
 
@@ -195,7 +157,7 @@ void GetContours() {
       // Check each point
       check_left = false;
       check_right = false;
-      for (int j = 0; j < contours[i].size(); j++) {
+      /*for (int j = 0; j < contours[i].size(); j++) {
         // cout<< i << ": "<< contours[i][j].x <<endl;
         // circle(drawing,contours[i][j],1,cv::Scalar(0,0,255));
         if ((contours[i][j].x < 296))
@@ -204,7 +166,7 @@ void GetContours() {
           check_right = true;
       }
       // cout << i <<" "<< dem <<endl;
-      if ((check_left) && (check_right))
+      if ((check_left) && (check_right))*/
         drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
       //}
     }

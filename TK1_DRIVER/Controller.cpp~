@@ -1,5 +1,7 @@
 #include "Controller.h"
 
+#define DEBUG 0
+
 Controller::Controller() {
   pca9685 = new PCA9685();
   err = pca9685->openPCA9685();
@@ -18,6 +20,8 @@ Controller::Controller() {
 Controller::~Controller() {}
 
 void Controller::Speed(int left, int right) {
+  if (left > 100) left = 100;
+  if (left < -100) left = -100;
   int real_left = ((left * multiplier) / 100) * ratio;
   int real_right = ((right * multiplier) / 100) * ratio;
 

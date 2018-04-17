@@ -20,6 +20,10 @@ Controller::Controller() {
 Controller::~Controller() {}
 
 void Controller::Speed(int left, int right) {
+  if (left > 100) left = 100;
+  if (left < -100) left = -100;
+  if (right > 100) right = 100;
+  if (right < -100) right = -100;
   int real_left = ((left * multiplier) / 100) * ratio;
   int real_right = ((right * multiplier) / 100) * ratio;
 
