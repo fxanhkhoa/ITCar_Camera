@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     }
     else if (mode == MODE_VANISHING){
       cap >> frame;
-
+      mode_vanishing();
     }
 
     if (waitKey(30) == 27)
@@ -276,8 +276,10 @@ int mode_vanishing(){
 
   HoughLines(edges, lines, 1, CV_PI / 180, 50, 0, 0);
   if (lines.size() > 0) {
-
+    center = GetCenter(lines);
   }
+  circle(crop_img, center, 3, Scalar(168, 1, 170), CV_FILLED, 8, 0);
+  imshow("vanishing", crop_img);
 }
 
 Point GetCenter(vector<Vec2f> lines){
