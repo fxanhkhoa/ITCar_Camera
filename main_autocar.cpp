@@ -274,11 +274,11 @@ int mode_vanishing(){
   dilate(edges, edges, element,Point(-1,-1));
   erode(edges, edges, element, Point(-1, -1));
 
-  HoughLines(edges, lines, 1, CV_PI / 180, 50, 0, 0);
+  HoughLines(edges, lines, 1, CV_PI / 180, 55, 0, 0);
   if (lines.size() > 0) {
     center = GetCenter(lines);
   }
-  circle(crop_img, center, 3, Scalar(168, 1, 170), CV_FILLED, 8, 0);
+  circle(crop_img, center, 5, Scalar(168, 1, 170), CV_FILLED, 8, 0);
   imshow("vanishing", crop_img);
 }
 
