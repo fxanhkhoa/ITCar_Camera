@@ -18,13 +18,16 @@ using namespace std;
 using namespace cv;
 
 #define MODE_CONTOUR 1
+#define MODE_VANISHING 2
 #define DEBUG 0
 
 /******** Prototype ***********/
 Point GetCenter(vector<Vec2f> lines);
 void GetContours();
 int mode_contour();
+int mode_vanishing();
 double getTheta(Point car, Point dst);
+Point GetCenter(vector<Vec2f> lines);
 int getkey();
 /*------ End Prototype ------*/
 
@@ -70,21 +73,33 @@ int main(int argc, char **argv) {
   while (1) {
     gpioGetValue(BTN1, &value);
     if (value == low) {
-      //_Controller->Speed(100,100);
-      //_Controller->Handle(90);
-      mode = MODE_CONTOUR;
+      if (mode != MODE_CONTOUR)
+        mode = MODE_CONTOUR;
+      else{
+        mode = 0;
+        _Controller->Speed(0, 0);
+        _Controller->Handle(0);
+      }
     }
     gpioGetValue(BTN2, &value);
     if (value == low) {
-      mode = 0;
-      _Controller->Speed(0, 0);
-      _Controller->Handle(0);
+      if (mode != MODE_VANISHING)
+        mode = MODE_VANISHING;
+      else{
+        mode = 0;
+        _Controller->Speed(0, 0);
+        _Controller->Handle(0);
+      }
     }
     if (mode == MODE_CONTOUR) {
       cap >> frame;
       motor_left = 100;
       motor_right = 100;
       mode_contour();
+    }
+    else if (mode == MODE_VANISHING){
+      cap >> frame;
+
     }
 
     if (waitKey(30) == 27)
@@ -233,6 +248,79 @@ void GetContours() {
     imshow("Contours", drawing);
   }
 }
+
+int mode_vanishing(){
+  resize(frame, frame, Size(800, 600));
+  // Set region
+
+  Rect roi;
+  roi.x = 100;
+  roi.y = 200;
+  roi.width = 600;
+  roi.height = 200;
+
+  Mat element = getStructuringElement(MORPH_CROSS, Size(5, 5), Point(2, 2));
+  // Crop with ROI
+  crop_img = frame(roi);
+  cvtColor(crop_img, gray, COLOR_BGR2GRAY);
+
+  GaussianBlur(gray, gray, Size(15, 15), 1.5, 1.5);
+
+  // bitwise_not(gray, gray);
+
+  threshold(gray, thresh, 150, 255, THRESH_BINARY_INV);
+
+  Canny(thresh, edges, 125, 255);
+  dilate(edges, edges, element,Point(-1,-1));
+  erode(edges, edges, element, Point(-1, -1));
+
+  HoughLines(edges, lines, 1, CV_PI / 180, 50, 0, 0);
+  if (lines.size() > 0) {
+
+  }
+}
+
+Point GetCenter(vector<Vec2f> lines){
+  double Centerx = 0;
+  int count = 0;
+  // cout <<"size:"<< lines.size()<< endl;
+  for (size_t i = 0; i < lines.size() - 1; i++) {
+    for (size_t j = i + 1; j < lines.size(); j++) {
+      float rho1 = lines[i][0], theta1 = lines[i][1];
+      float rho2 = lines[j][0], theta2 = lines[j][1];
+      Point pt1, pt2;
+      double a1 = cos(theta1), b1 = sin(theta1);
+      double a2 = cos(theta2), b2 = sin(theta2);
+
+      // Calculate Intersection
+      double determinant = a1 * b2 - a2 * b1;
+      if (determinant == 0) {
+        // parallel
+        // cout << "parallel" << endl;
+      } else {
+        count++;
+        double xi = (rho1 * b2 - rho2 * b1) / determinant;
+        Centerx += xi;
+        double yi = (a1 * rho2 - a2 * rho1) / determinant;
+        circle(crop_img, Point(xi, 50), 2, Scalar(5, 255, 100), CV_FILLED, 8,
+               0);
+      }
+
+      double x0 = a1 * rho1, y0 = b1 * rho1;
+      // Phuong trinh ax + by = c voi a = cos(theta) va b = sin(theta)
+
+      pt1.x = cvRound(x0 + 1000 * (-b1));
+      pt1.y = cvRound(y0 + 1000 * (a1));
+      pt2.x = cvRound(x0 - 1000 * (-b1));
+      pt2.y = cvRound(y0 - 1000 * (a1));
+
+      line(crop_img, pt1, pt2, Scalar(0, 0, 255), 3, CV_AA);
+    }
+  }
+  // cout<<"Count:"<<count<<endl;
+  return Point(Centerx / count, 50);
+}
+
 
 /*****************************************************************/
 

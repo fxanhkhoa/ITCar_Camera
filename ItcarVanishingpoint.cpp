@@ -23,7 +23,7 @@ Point center;
 Mat frame;
 
 int main(int argc, char **argv) {
-  VideoCapture cap(0);
+  VideoCapture cap("videos/clip1_FPT.mp4");
   if (!cap.isOpened())
     return -1;
 
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
   for (;;) {
     try {
-      
+
       cap >> frame;
       resize(frame, frame, Size(800, 600));
       // Set region
@@ -41,6 +41,8 @@ int main(int argc, char **argv) {
       roi.y = 200;
       roi.width = 600;
       roi.height = 200;
+
+      Mat element = getStructuringElement(MORPH_CROSS, Size(5, 5), Point(2, 2));
 
       // Crop with ROI
       crop_img = frame(roi);
@@ -52,9 +54,11 @@ int main(int argc, char **argv) {
 
       threshold(gray, thresh, 150, 255, THRESH_BINARY_INV);
 
-      Canny(thresh, edges, 0, 30, 3);
+      Canny(thresh, edges, 125, 255);
+      dilate(edges, edges, element,Point(-1,-1));
+			erode(edges, edges, element, Point(-1, -1));
 
-      HoughLines(edges, lines, 1, CV_PI / 180, 100, 0, 0);
+      HoughLines(edges, lines, 1, CV_PI / 180, 50, 0, 0);
       if (lines.size() > 0) {
         center = GetCenter(lines);
         GetContours();
@@ -154,7 +158,7 @@ void GetContours() {
         drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
       //}
     }
-    cout << endl;
+    //cout << endl;
     imshow("Contours", drawing);
   }
 }
