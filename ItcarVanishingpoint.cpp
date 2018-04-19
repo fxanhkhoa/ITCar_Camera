@@ -23,7 +23,7 @@ Point center;
 Mat frame;
 
 int main(int argc, char **argv) {
-  VideoCapture cap("videos/clip1_FPT.mp4");
+  VideoCapture cap("videos/Line1.mp4");
   if (!cap.isOpened())
     return -1;
 

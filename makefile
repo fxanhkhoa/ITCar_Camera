@@ -18,7 +18,14 @@ testcam: main.cpp
 autocar:main_autocar.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp TK1_DRIVER/jetsonGPIO.c
 	$(CC) main_autocar.cpp TK1_DRIVER/Controller.cpp TK1_DRIVER/JHPWMPCA9685.cpp TK1_DRIVER/jetsonGPIO.c -I TK1_DRIVER -o autocar $(LIBS)
 	@echo 'done'
-	
+
+testsobel: test_sobel.cpp
+	$(CC) test_sobel.cpp -o testsobel $(LIBS)
+	@echo 'done'
+
+sobelThresh: sobel_thresh.cpp
+	$(CC) sobel_thresh.cpp -o sobelThresh $(LIBS)
+	@echo 'done'
 
 clean:
-	rm -rf *o output testcam testmotor autocar
+	rm -rf *o output testcam testmotor autocar sobelThresh
