@@ -26,7 +26,7 @@ int delta = 0;
 int scale = 1;
 
 Mat adp_thresh_grayscale(Mat gray, int threshold_val);
-
+Mat get_perspective(Mat frame, Mat src);
 Mat mag_thresh(Mat image, int sobel_kernel, int min_mag_thresh,
                int max_mag_thresh);
 Mat dir_threshold(Mat image, int sobel_kernel, double min_thresh_angle,
@@ -46,12 +46,12 @@ int main(int argc, char **argv) {
     return -1;
   while (1) {
     cap >> frame;
-    resize(frame, frame, Size(800, 600));
+    resize(frame, frame, Size(1280, 720));
     GaussianBlur(frame, frame, Size(3, 3), 0, 0, BORDER_DEFAULT);
     cvtColor(frame, frame, CV_BGR2GRAY, 1);
 
     output = Mat::zeros(frame.size(), CV_8U);
-    output = thresholding(frame, 200, 255, 0, 25, 200, 255, 0.7, 1.3, 113, 255,
+    output = thresholding(frame, 150, 255, 0, 25, 150, 255, 0.7, 1.3, 113, 255,
                           234, 255, 15, 250);
 
     // output = abs_sobel_thresh(frame, 1, 3, 150,255);
@@ -65,21 +65,68 @@ int main(int argc, char **argv) {
     // cout << output << endl;
     // output = frame;
 
-    int offset = 30;
-    Mat mask = Mat::zeros(frame.size(), CV_8U);
-    Point pts[4] = {
-      Point(0 + offset, frame.rows),
-      Point(frame.cols / 2.9, frame.rows / 1.95),
-      Point(frame.cols / 1.5, frame.rows / 1.95),
-      Point(frame.cols, frame.rows),
-    };
-    fillConvexPoly(mask, pts, 4, Scalar(255));
-    bitwise_and(mask, output, frame);
+
+    //crop_img = frame(roi);
+    //imshow("crop", crop_img);
+    frame = get_perspective(frame, output);
+
     imshow("frame", frame);
     if (waitKey(30) == 27)
       break;
   }
   return 0;
+}
+
+Mat get_perspective(Mat frame, Mat src){
+  int offset = 0;
+  Mat mask = Mat::zeros(frame.size(), CV_8U);
+  Point pts_dst[4] = {
+    Point(0 + offset, frame.rows),
+    Point(frame.cols / 2.9, frame.rows / 1.9),
+    Point(frame.cols / 1.5, frame.rows / 1.9),
+    Point(frame.cols, frame.rows),
+  };
+
+  Rect roi;
+  roi.x = 100;
+  roi.y = frame.rows/1.9;
+  roi.width = 1280 - 2*100;
+  roi.height = frame.rows - roi.y;
+
+  Mat crop_img;
+  int off = 10;
+  Point2f inputQuad[4], outputQuad[4];
+  // lay tam cua tung line giong len ra output (input la )
+  /*
+  inputQuad[0] = Point2f(580, 460);
+  inputQuad[1] = Point2f(205, 720);
+  inputQuad[2] = Point2f(1110, 720);
+  inputQuad[3] = Point2f(703, 460);
+
+  outputQuad[0] = Point2f(320, 0);
+  outputQuad[1] = Point2f(320, 720);
+  outputQuad[2] = Point2f(960, 720);
+  outputQuad[3] = Point2f(960, 0);
+  */
+
+  inputQuad[0] = Point2f(0 + offset, frame.rows);
+  inputQuad[1] = Point2f(frame.cols / 2.9, frame.rows / 2.5);
+  inputQuad[2] = Point2f(frame.cols / 1.5, frame.rows / 2.5);
+  inputQuad[3] = Point2f(frame.cols, frame.rows);
+
+  outputQuad[0] = Point2f((frame.cols / 2.9 + 0 + offset) / 2, frame.rows);
+  outputQuad[1] = Point2f((frame.cols / 2.9 + 0 + offset) / 2, 0);
+  outputQuad[2] = Point2f((frame.cols / 1.5 + frame.cols) / 2, 0);
+  outputQuad[3] = Point2f((frame.cols / 1.5 + frame.cols) / 2, frame.rows);
+
+  fillConvexPoly(mask, pts_dst, 4, Scalar(255));
+  bitwise_and(mask, src, frame);
+  Mat trans_mat33 = Mat::zeros(frame.size(), CV_64F);
+  trans_mat33 = getPerspectiveTransform(inputQuad, outputQuad);
+  warpPerspective(frame, frame, trans_mat33, frame.size(), cv::INTER_LINEAR);
+
+  crop_img = frame(roi);
+  return crop_img;
 }
 
 Mat adp_thresh_grayscale(Mat gray, int threshold_val){
