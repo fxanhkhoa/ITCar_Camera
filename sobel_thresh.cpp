@@ -24,6 +24,8 @@ using namespace cv;
 int ddepth = CV_16S;
 int delta = 0;
 int scale = 1;
+// Choose the number of sliding windows
+int nwindows = 9;
 
 Mat adp_thresh_grayscale(Mat gray, int threshold_val);
 Mat get_perspective(Mat frame, Mat src);
@@ -51,24 +53,83 @@ int main(int argc, char **argv) {
     cvtColor(frame, frame, CV_BGR2GRAY, 1);
 
     output = Mat::zeros(frame.size(), CV_8U);
-    output = thresholding(frame, 150, 255, 0, 25, 150, 255, 0.7, 1.3, 113, 255,
+    output = thresholding(frame, 50, 255, 0, 25, 50, 255, 0.7, 1.3, 113, 255,
                           234, 255, 15, 250);
 
     // output = abs_sobel_thresh(frame, 1, 3, 150,255);
     // output = dir_threshold(frame, 3, 0, M_PI/2);
     //output = mag_thresh(frame, 3, 200, 255);
-    // imshow("a", output);
-    /*for (int i = 0; i < output.rows; i++)
-      for (int j = 0; j < output.cols; j++){
-        cout <<
-      }*/
-    // cout << output << endl;
-    // output = frame;
 
-
-    //crop_img = frame(roi);
-    //imshow("crop", crop_img);
     frame = get_perspective(frame, output);
+    int histogram[1200] = {0};
+
+    for (int i = 0; i < 1080; i++){
+      for (int j = frame.rows / 2; j < frame.rows; j++){
+        if (frame.at<uchar>(j,i) == 255){
+          histogram[i]++;
+        }
+      }
+    }
+    int leftx_base, rightx_base, max = 0;
+    // Get left base
+    for (int i = 0; i < 1080/2; i ++){
+      if (max < histogram[i]){
+        max = histogram[i];
+        leftx_base = i;
+      }
+    }
+
+    //Get right base
+    max = 0;
+    for (int i = 1080 / 2; i < 1080; i++){
+      if (max < histogram[i]){
+        max = histogram[i];
+        rightx_base = i;
+      }
+    }
+    int window_height = frame.rows / nwindows;
+    int nonzerox[frame.rows*frame.cols];
+    int nonzeroy[frame.rows*frame.cols];
+    int nonzero_count = 0;
+    for (int i = 0; i < frame.rows; i++)
+      for (int j = 0; j < frame.cols; j++){
+        if (frame.at<uchar>(i,j) == 255){
+          nonzerox[nonzero_count] = j;
+          nonzeroy[nonzero_count] = i;
+          nonzero_count++;
+        }
+      }
+
+    int margin = 50;
+    int minpix = 50;
+    int leftx_current, rightx_current;
+    leftx_current = leftx_base;
+    rightx_current = rightx_base;
+
+    for (int i = 0; i < nwindows; i++){
+      int win_y_low, win_y_high, win_xleft_low, win_xleft_high, win_xright_low, win_xright_high;
+
+      win_y_low = frame.rows - (i * window_height);
+      win_y_high = frame.rows - ((i + 1) * window_height);
+
+      win_xleft_low = leftx_current - margin;
+      win_xleft_high = leftx_current + margin;
+      win_xright_low = rightx_current - margin;
+      win_xright_high = rightx_current + margin;
+      rectangle(frame, Point(win_xleft_low, win_y_low), Point(win_xleft_high, win_y_high), Scalar(255,255,255));
+      rectangle(frame, Point(win_xright_low, win_y_low), Point(win_xright_high, win_y_high), Scalar(255,255,255));
+
+      //Identify the nonzero pixels in x and y within the window
+      //Point left_lane_inds[1000], right_lane_inds[1000];
+      vector<Point> left_lane_inds;
+      int count_left_inds = 0, count_right_inds = 0;
+      for (int i = win_y_high; i <= win_y_low; i++)
+        for (int j = win_xleft_low; j <= win_xleft_high; j++){
+          if (frame.at<uchar>(i,j) == 255){
+            left_lane_inds.push_back(Point(i,j));
+          }
+        }
+    }
 
     imshow("frame", frame);
     if (waitKey(30) == 27)
