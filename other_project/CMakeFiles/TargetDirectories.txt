@@ -1,0 +1,3 @@
+/home/fxanhkhoa/ITCar_Camera/other_project/CMakeFiles/edit_cache.dir
+/home/fxanhkhoa/ITCar_Camera/other_project/CMakeFiles/rebuild_cache.dir
+/home/fxanhkhoa/ITCar_Camera/other_project/CMakeFiles/sobel.dir

@@ -43,7 +43,7 @@ Mat thresholding(Mat image, int grad_thx_min, int grad_thx_max,
 
 int main(int argc, char **argv) {
   Mat frame, output;
-  VideoCapture cap("videos/clip1_FPT.mp4");
+  VideoCapture cap("../videos/clip1_FPT.mp4");
   if (!cap.isOpened())
     return -1;
   while (1) {
