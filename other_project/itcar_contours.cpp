@@ -28,6 +28,7 @@ int main( int argc, char** argv )
 	{
 		Mat frame;
 		cap >> frame;
+		//GpuMat d_frame;
 		resize(frame, frame, Size(800, 600));
 		// Set region
 
@@ -64,7 +65,7 @@ int main( int argc, char** argv )
 		}
 	}
 	catch(const std::exception& e) {}
-		if (waitKey(30) >= 0) break;
+		if (waitKey(30) == 27) break;
 	}
 	return 0;
 }

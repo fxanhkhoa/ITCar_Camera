@@ -14,12 +14,14 @@ Controller::Controller() {
     pca9685->setPWMFrequency(60);
     sleep(1);
     pca9685->setPWM(STEERING_CHANNEL, 0, 420);
+    //pca9685->setPWM(STEERING_CHANNEL, 0, 0);
     Speed(0,0);
 }
 
 Controller::~Controller() {}
 
 void Controller::Speed(int left, int right) {
+  double ratio = 0.7;
   if (left > 100) left = 100;
   if (left < -100) left = -100;
   if (right > 100) right = 100;

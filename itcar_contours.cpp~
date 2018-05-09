@@ -14,7 +14,7 @@ int main( int argc, char** argv )
 {
 	VideoCapture cap(0);
 	if (!cap.isOpened()){
-		cout<<"error"l
+		cout<<"error";
 		return -1;
 	}
 
@@ -28,7 +28,8 @@ int main( int argc, char** argv )
 	{
 		Mat frame;
 		cap >> frame;
-		resize(frame, frame, Size(800, 600));
+		GpuMat d_frame;
+		resize(d_frame, frame, Size(800, 600));
 		// Set region
 
 		Rect roi;
@@ -64,7 +65,7 @@ int main( int argc, char** argv )
 		}
 	}
 	catch(const std::exception& e) {}
-		if (waitKey(30) >= 0) break;
+		if (waitKey(30) == 27) break;
 	}
 	return 0;
 }

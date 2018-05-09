@@ -1,7 +1,7 @@
-#include "opencv2/imgproc/imgproc.hpp"
+//#include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
 #include <math.h>
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,14 +11,23 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "TK1_DRIVER/Controller.h"
-#include "TK1_DRIVER/jetsonGPIO.h"
+#include "opencv2/core.hpp"
+#include <opencv2/core/utility.hpp>
+#include "opencv2/highgui.hpp"
+#include "opencv2/core/cuda.hpp"
+#include "opencv2/imgproc.hpp"
+
+#include "../include/Controller.h"
+#include "../include/jetsonGPIO.h"
+#include "../include/Sign_regconize.h"
 
 using namespace std;
 using namespace cv;
+using namespace cv::cuda;
 
 #define MODE_CONTOUR 1
 #define MODE_VANISHING 2
+#define MODE_SIGN_REGCONIZE 3
 #define DEBUG 0
 
 /******** Prototype ***********/
@@ -26,6 +35,7 @@ Point GetCenter(vector<Vec2f> lines);
 void GetContours();
 int mode_contour();
 int mode_vanishing();
+int mode_sign_regconize();
 double getTheta(Point car, Point dst);
 Point GetCenter(vector<Vec2f> lines);
 int getkey();
@@ -39,7 +49,9 @@ vector<Vec4i> hierarchy;
 vector<Vec2f> lines;
 Point center;
 int mode = 0;
+int sign_result = 0;
 Mat frame;
+bool flag = false, turned = false;
 double centerx;
 Controller *_Controller; // Motro and Servo controll variable
 int motor_left, motor_right;
@@ -64,7 +76,8 @@ int main(int argc, char **argv) {
 
   // Wait for the push button to be pressed
   cout << "Please press the button! ESC key quits the program" << endl;
-
+  flag = false;
+  turned = false;
   unsigned int value = high;
 
   if (!cap.isOpened())
@@ -79,6 +92,7 @@ int main(int argc, char **argv) {
         mode = 0;
         _Controller->Speed(0, 0);
         _Controller->Handle(0);
+        flag = false;
       }
     }
     gpioGetValue(BTN2, &value);
@@ -91,15 +105,49 @@ int main(int argc, char **argv) {
         _Controller->Handle(0);
       }
     }
+    gpioGetValue(BTN3, &value);
+    if (value == low){
+      if (mode != MODE_SIGN_REGCONIZE)
+        mode = MODE_SIGN_REGCONIZE;
+      else{
+        mode = 0;
+        flag = false;
+        turned = false;
+        _Controller->Speed(0, 0);
+        _Controller->Handle(0);
+      }
+    }
+    gpioGetValue(BTN4, &value);
+    if (value == low){
+        mode = 0;
+        _Controller->Speed(0, 0);
+        _Controller->Handle(0);
+    }
     if (mode == MODE_CONTOUR) {
       cap >> frame;
       motor_left = 100;
       motor_right = 100;
+      turned = true;
       mode_contour();
     }
     else if (mode == MODE_VANISHING){
       cap >> frame;
-      mode_vanishing();
+      //mode_vanishing();
+      //_Controller->Speed(20, 100);
+      //_Controller->Handle(-60);
+      mode_contour();
+    }
+    else if (mode == MODE_SIGN_REGCONIZE){
+      cap >> frame;
+      if (flag == false){
+      //imshow("aaa",frame);
+      //cout<<"a"<<endl;
+        sign_result = mode_sign_regconize();
+        if ((sign_result == 1) || (sign_result == 2))
+            flag = true;
+      }
+      else
+        mode_contour();
     }
 
     if (waitKey(30) == 27)
@@ -117,17 +165,40 @@ int main(int argc, char **argv) {
 
 int mode_contour() {
   try {
+    if (turned == false){
+        //cout<<"in"<<endl;
+    if (sign_result == 1){
+        //trai
+        _Controller->Handle(-45);
+        _Controller->Speed(70,100);
+        sleep(2);
+        turned = true;
+        motor_left = 100;
+        motor_right = 100;
+    }
+    else if (sign_result == 2){
+        //phai
+        _Controller->Handle(45);
+        _Controller->Speed(100,70);
+        //for (long i = 0; i < 9999999; i++);
+        sleep(2);
+        turned = true;
+        motor_left = 100;
+        motor_right = 100;
+    }
+    }
+    else{
     resize(frame, frame, Size(800, 600));
 
     // Set region
 
     Rect roi;
-    roi.x = 100;
-    roi.y = 400;
-    roi.width = 600;
-    roi.height = 200;
+    roi.x = 000;
+    roi.y = 500;
+    roi.width = 800;
+    roi.height = 100;
 
-    Point carPosition(300, 100);
+    Point carPosition(400, 100);
     Point prvPosition = carPosition;
     // Crop with ROI
     crop_img = frame(roi);
@@ -146,7 +217,7 @@ int mode_contour() {
     // circle(crop_img, Point(x0,y0), 2, Scalar(5,255,100), CV_FILLED, 8,
     // 0);
     // circle(crop_img, center, 3, Scalar(168, 1, 170), CV_FILLED, 8, 0);
-    // imshow("frame1", frame);
+     imshow("frame1", frame);
     imshow("vanishing", crop_img);
     imshow("frame", thresh);
 
@@ -154,7 +225,8 @@ int mode_contour() {
     // cout<< theta << endl;
     if (abs(theta) > 5) {
       _Controller->Handle(int(theta));
-
+      motor_left = 100;
+      motor_right = 100;
       if (theta > 0)
         motor_right -= theta;
       else if (theta < 0)
@@ -165,7 +237,7 @@ int mode_contour() {
       _Controller->Handle(0);
       _Controller->Speed(100, 100);
     }
-
+   }
   } catch (const std::exception &e) {
   }
   return 0;
@@ -194,7 +266,7 @@ void GetContours() {
     for (int i = 0; i < contours.size(); i++) {
       double area = contourArea(contours[i]);
       double arclength = arcLength(contours[i], true);
-      if (area > 15000) {
+      if (area > 25000) {
         dem++; //(Add number of contour)
         // Add moment point
         mu[i] = moments(contours[i], false);
@@ -242,10 +314,11 @@ void GetContours() {
     centerx = centerx / dem;
     circle(drawing, Point(centerx, 50), 4, color, -1, 8, 0);
 // cout<<" max" << max <<endl;
-#if DEBUG
-    cout << endl;
-#endif
+
     imshow("Contours", drawing);
+#if DEBUG
+#endif
+
   }
 }
 
@@ -294,7 +367,7 @@ Point GetCenter(vector<Vec2f> lines){
       double a1 = cos(theta1), b1 = sin(theta1);
       double a2 = cos(theta2), b2 = sin(theta2);
 
-      // Calculate Intersection
+      // Calreturn number_result;culate Intersection
       double determinant = a1 * b2 - a2 * b1;
       if (determinant == 0) {
         // parallel
@@ -321,6 +394,21 @@ Point GetCenter(vector<Vec2f> lines){
   }
   // cout<<"Count:"<<count<<endl;
   return Point(Centerx / count, 50);
+}
+
+int mode_sign_regconize(){
+  Mat result;
+  int number_result;
+  if(recognizeBlueSign(frame, result) == 1){
+      cout<<"trai"<<endl;
+      number_result = 1;
+  }
+  else if(recognizeBlueSign(frame, result)==2){
+      cout<<"phai"<<endl;
+      number_result = 2;
+  }
+  imshow("frame", frame);
+  return number_result;
 }
 
 

@@ -1,0 +1,56 @@
+cmake_minimum_required(VERSION 2.8.4)
+
+project(autocar)
+
+find_package(OpenCV REQUIRED)
+find_package(CUDA REQUIRED)
+
+link_libraries(${OpenCV_LIBS})
+
+if(CUDA_FOUND)
+  # compared to class settings, we let NVidia's FindCUDA CMake detect 
+  # whether to build x64.  We tell it to support most devices, though, 
+  # to make sure more people can easily run class code without knowing 
+  # about this compiler argument
+  set(CUDA_NVCC_FLAGS "
+  -ccbin /usr/bin/clang; 
+  -gencode;arch=compute_30,code=sm_30;  
+  -gencode;arch=compute_35,code=sm_35;
+  -gencode;arch=compute_35,code=compute_35;
+  -gencode;arch=compute_20,code=sm_20; 
+  -gencode;arch=compute_11,code=sm_11; 
+  -gencode;arch=compute_12,code=sm_12;
+  -gencode;arch=compute_13,code=sm_13;")
+
+  
+
+  # add debugging to CUDA NVCC flags.  For NVidia's NSight tools.
+  set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
+
+  
+else(CUDA_FOUND)
+  message("CUDA is not installed on this system.")
+endif()
+
+include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(include)
+
+
+#Can manually add the sources using the set command as follows:
+#set(SOURCES TK1_DRIVER/Controller.cpp)
+#set(SOURCES TK1_DRIVER/jetsonGPIO.cpp)
+#set(SOURCES TK1_DRIVER/JHPWMPCA9685.cpp)
+#set(SOURCES main_autocar.cpp)
+#set(SOURCES Sign_regconize.cpp)
+
+#However, the file(GLOB...) allows for wildcard additions:
+file(GLOB SOURCES "src/*.cpp")
+
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+
+add_executable(autocar ${SOURCES})
+
+target_link_libraries(autocar ${OpenCV_LIBS})
+

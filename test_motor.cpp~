@@ -49,7 +49,7 @@ int main()
 		}
 	}
 	
-	cout << "GPIO example finished." << endl;
+	cout << "End" << endl;
 	gpioUnexport(BTN1);
     	gpioUnexport(BTN2);
 	gpioUnexport(BTN3);
