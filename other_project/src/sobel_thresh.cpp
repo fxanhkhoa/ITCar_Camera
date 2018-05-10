@@ -123,12 +123,30 @@ int main(int argc, char **argv) {
       //Point left_lane_inds[1000], right_lane_inds[1000];
       vector<Point> left_lane_inds;
       int count_left_inds = 0, count_right_inds = 0;
+      long Sum_Left_x = 0, Sum_Right_x = 0;
       for (int i = win_y_high; i <= win_y_low; i++)
         for (int j = win_xleft_low; j <= win_xleft_high; j++){
           if (frame.at<uchar>(i,j) == 255){
             left_lane_inds.push_back(Point(i,j));
+            count_left_inds++;
+            Sum_Left_x += j;
           }
         }
+
+      vector<Point> right_lane_inds;
+      for (int i = win_y_high; i <= win_y_low; i++)
+        for (int j = win_xright_low; j <= win_xright_high; j++){
+          if (frame.at<uchar>(i,j) == 255){
+            right_lane_inds.push_back(Point(i,j));
+            count_right_inds++;
+            Sum_Right_x += j;
+          }
+        }
+
+      // Repositioning center point
+      if (count_left_inds > minpix){
+        leftx_current = Sum_Left_x / count_left_inds;
+      }
     }
 
     imshow("frame", frame);
