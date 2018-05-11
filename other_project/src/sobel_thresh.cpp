@@ -42,134 +42,163 @@ Mat thresholding(Mat image, int grad_thx_min, int grad_thx_max,
                  int s_threshold_min, int s_threshold_max, int v_threshold_min,
                  int v_threshold_max, int k_size, int adp_thr);
 double *polyfit(double leftx[], double lefty[], int count, int degree);
+double *sliding_window(Mat frame);
+
+double * getRandom( ) {
+
+   static double  r[10];
+
+   // set the seed
+   srand( (unsigned)time( NULL ) );
+
+   for (int i = 0; i < 10; ++i) {
+      r[i] = rand();
+      cout << r[i] << endl;
+   }
+
+   return r;
+}
+
 
 int main(int argc, char **argv) {
-  Mat frame, output;
+  Mat frame;
+  double *fit = new double[10];
   VideoCapture cap("../videos/clip1_FPT.mp4");
   if (!cap.isOpened())
     return -1;
   while (1) {
     cap >> frame;
-    resize(frame, frame, Size(1280, 720));
-    GaussianBlur(frame, frame, Size(3, 3), 0, 0, BORDER_DEFAULT);
-    cvtColor(frame, frame, CV_BGR2GRAY, 1);
 
-    output = Mat::zeros(frame.size(), CV_8U);
-    output = thresholding(frame, 50, 255, 0, 25, 50, 255, 0.7, 1.3, 113, 255,
-                          234, 255, 15, 250);
+    fit = sliding_window(frame);
 
-    // output = abs_sobel_thresh(frame, 1, 3, 150,255);
-    // output = dir_threshold(frame, 3, 0, M_PI/2);
-    //output = mag_thresh(frame, 3, 200, 255);
-
-    frame = get_perspective(frame, output);
-    int histogram[1200] = {0};
-
-    for (int i = 0; i < 1080; i++){
-      for (int j = frame.rows / 2; j < frame.rows; j++){
-        if (frame.at<uchar>(j,i) == 255){
-          histogram[i]++;
-        }
-      }
-    }
-    int leftx_base, rightx_base, max = 0;
-    // Get left base
-    for (int i = 0; i < 1080/2; i ++){
-      if (max < histogram[i]){
-        max = histogram[i];
-        leftx_base = i;
-      }
-    }
-
-    //Get right base
-    max = 0;
-    for (int i = 1080 / 2; i < 1080; i++){
-      if (max < histogram[i]){
-        max = histogram[i];
-        rightx_base = i;
-      }
-    }
-    int window_height = frame.rows / nwindows;
-    int nonzerox[frame.rows*frame.cols];
-    int nonzeroy[frame.rows*frame.cols];
-    int nonzero_count = 0;
-
-    for (int i = 0; i < frame.rows; i++)
-      for (int j = 0; j < frame.cols; j++){
-        if (frame.at<uchar>(i,j) == 255){
-          nonzerox[nonzero_count] = j;
-          nonzeroy[nonzero_count] = i;
-          nonzero_count++;
-        }
-      }
-
-    int margin = 50;
-    int minpix = 50;
-    int leftx_current, rightx_current;
-    leftx_current = leftx_base;
-    rightx_current = rightx_base;
-    vector<Point> left_lane_inds;// Put here for concate with all windows
-    vector<Point> right_lane_inds;// Put here for concate with all windows
-    double leftx[8000], lefty[6000], rightx[8000], righty[6000];
-    int count_nozeroleft = 0, count_nozeroright = 0;
-
-    for (int i = 0; i < nwindows; i++){
-      int win_y_low, win_y_high, win_xleft_low, win_xleft_high, win_xright_low, win_xright_high;
-
-      win_y_low = frame.rows - (i * window_height);
-      win_y_high = frame.rows - ((i + 1) * window_height);
-
-      win_xleft_low = leftx_current - margin;
-      win_xleft_high = leftx_current + margin;
-      win_xright_low = rightx_current - margin;
-      win_xright_high = rightx_current + margin;
-      rectangle(frame, Point(win_xleft_low, win_y_low), Point(win_xleft_high, win_y_high), Scalar(255,255,255));
-      rectangle(frame, Point(win_xright_low, win_y_low), Point(win_xright_high, win_y_high), Scalar(255,255,255));
-
-      //Identify the nonzero pixels in x and y within the window
-      //Point left_lane_inds[1000], right_lane_inds[1000];
-      int count_left_inds = 0, count_right_inds = 0;
-      long Sum_Left_x = 0, Sum_Right_x = 0;
-
-      for (int i = win_y_high; i <= win_y_low; i++)
-        for (int j = win_xleft_low; j <= win_xleft_high; j++){
-          if (frame.at<uchar>(i,j) == 255){
-            left_lane_inds.push_back(Point(i,j));
-            leftx[count_nozeroleft] = j;
-            lefty[count_nozeroleft] = i;
-            count_nozeroleft++;
-            count_left_inds++;
-            Sum_Left_x += j;
-          }
-        }
-
-      for (int i = win_y_high; i <= win_y_low; i++)
-        for (int j = win_xright_low; j <= win_xright_high; j++){
-          if (frame.at<uchar>(i,j) == 255){
-            right_lane_inds.push_back(Point(i,j));
-            rightx[count_nozeroright] = j;
-            righty[count_nozeroright] = i;
-            count_nozeroright++;
-            count_right_inds++;
-            Sum_Right_x += j;
-          }
-        }
-
-      // Repositioning center point
-      if (count_left_inds > minpix){
-        leftx_current = Sum_Left_x / count_left_inds;
-      }
-      if (count_right_inds > minpix){
-        rightx_current = Sum_Right_x / count_right_inds;
-      }
-    }
-    //cout<<"OK here" << count_nozeroright << endl;
-    polyfit(leftx, lefty, count_nozeroleft, 2);
-
-    imshow("frame", frame);
     if (waitKey(30) == 27)
       break;
   }
+  return 0;
+}
+
+double *sliding_window(Mat frame){
+  Mat output;
+
+  resize(frame, frame, Size(1280, 720));
+  GaussianBlur(frame, frame, Size(3, 3), 0, 0, BORDER_DEFAULT);
+  cvtColor(frame, frame, CV_BGR2GRAY, 1);
+
+  output = Mat::zeros(frame.size(), CV_8U);
+  output = thresholding(frame, 50, 255, 0, 25, 50, 255, 0.7, 1.3, 113, 255,
+                        234, 255, 15, 250);
+
+  // output = abs_sobel_thresh(frame, 1, 3, 150,255);
+  // output = dir_threshold(frame, 3, 0, M_PI/2);
+  //output = mag_thresh(frame, 3, 200, 255);
+
+  frame = get_perspective(frame, output);
+  int histogram[1200] = {0};
+
+  for (int i = 0; i < 1080; i++){
+    for (int j = frame.rows / 2; j < frame.rows; j++){
+      if (frame.at<uchar>(j,i) == 255){
+        histogram[i]++;
+      }
+    }
+  }
+  int leftx_base, rightx_base, max = 0;
+  // Get left base
+  for (int i = 0; i < 1080/2; i ++){
+    if (max < histogram[i]){
+      max = histogram[i];
+      leftx_base = i;
+    }
+  }
+
+  //Get right base
+  max = 0;
+  for (int i = 1080 / 2; i < 1080; i++){
+    if (max < histogram[i]){
+      max = histogram[i];
+      rightx_base = i;
+    }
+  }
+  int window_height = frame.rows / nwindows;
+  int nonzerox[frame.rows*frame.cols];
+  int nonzeroy[frame.rows*frame.cols];
+  int nonzero_count = 0;
+
+  for (int i = 0; i < frame.rows; i++)
+    for (int j = 0; j < frame.cols; j++){
+      if (frame.at<uchar>(i,j) == 255){
+        nonzerox[nonzero_count] = j;
+        nonzeroy[nonzero_count] = i;
+        nonzero_count++;
+      }
+    }
+
+  int margin = 50;
+  int minpix = 50;
+  int leftx_current, rightx_current;
+  leftx_current = leftx_base;
+  rightx_current = rightx_base;
+  vector<Point> left_lane_inds;// Put here for concate with all windows
+  vector<Point> right_lane_inds;// Put here for concate with all windows
+  double leftx[8000], lefty[6000], rightx[8000], righty[6000];
+  int count_nozeroleft = 0, count_nozeroright = 0;
+
+  for (int i = 0; i < nwindows; i++){
+    int win_y_low, win_y_high, win_xleft_low, win_xleft_high, win_xright_low, win_xright_high;
+
+    win_y_low = frame.rows - (i * window_height);
+    win_y_high = frame.rows - ((i + 1) * window_height);
+
+    win_xleft_low = leftx_current - margin;
+    win_xleft_high = leftx_current + margin;
+    win_xright_low = rightx_current - margin;
+    win_xright_high = rightx_current + margin;
+    rectangle(frame, Point(win_xleft_low, win_y_low), Point(win_xleft_high, win_y_high), Scalar(255,255,255));
+    rectangle(frame, Point(win_xright_low, win_y_low), Point(win_xright_high, win_y_high), Scalar(255,255,255));
+
+    //Identify the nonzero pixels in x and y within the window
+    //Point left_lane_inds[1000], right_lane_inds[1000];
+    int count_left_inds = 0, count_right_inds = 0;
+    long Sum_Left_x = 0, Sum_Right_x = 0;
+
+    for (int i = win_y_high; i <= win_y_low; i++)
+      for (int j = win_xleft_low; j <= win_xleft_high; j++){
+        if (frame.at<uchar>(i,j) == 255){
+          left_lane_inds.push_back(Point(i,j));
+          leftx[count_nozeroleft] = j;
+          lefty[count_nozeroleft] = i;
+          count_nozeroleft++;
+          count_left_inds++;
+          Sum_Left_x += j;
+        }
+      }
+
+    for (int i = win_y_high; i <= win_y_low; i++)
+      for (int j = win_xright_low; j <= win_xright_high; j++){
+        if (frame.at<uchar>(i,j) == 255){
+          right_lane_inds.push_back(Point(i,j));
+          rightx[count_nozeroright] = j;
+          righty[count_nozeroright] = i;
+          count_nozeroright++;
+          count_right_inds++;
+          Sum_Right_x += j;
+        }
+      }
+
+    // Repositioning center point
+    if (count_left_inds > minpix){
+      leftx_current = Sum_Left_x / count_left_inds;
+    }
+    if (count_right_inds > minpix){
+      rightx_current = Sum_Right_x / count_right_inds;
+    }
+  }
+  //cout<<"OK here" << count_nozeroright << endl;
+  double *temp1 = polyfit(leftx, lefty, count_nozeroleft, 2);
+  double *temp2;
+
+  cout << temp2[1];
+  imshow("frame", frame);
   return 0;
 }
 
@@ -185,7 +214,7 @@ double *polyfit(double x[], double y[], int count, int degree){
   }
 
   double B[n + 1][n + 2];
-  double a[ n + 1];
+  static double a[ n + 1]; // phai dung static de dia chi ko bi thay doi dan den segment fault
   for ( i = 0; i <= n; i++){
     for ( j = 0; j <= n; j++){
       B[i][j] = X[i + j];
