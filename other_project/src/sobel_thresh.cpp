@@ -10,6 +10,7 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#include <cmath>
 
 using namespace std;
 using namespace cv;
@@ -40,6 +41,7 @@ Mat thresholding(Mat image, int grad_thx_min, int grad_thx_max,
                  int mag_th_max, double dir_th_min, double dir_th_max,
                  int s_threshold_min, int s_threshold_max, int v_threshold_min,
                  int v_threshold_max, int k_size, int adp_thr);
+double *polyfit(double leftx[], double lefty[], int count, int degree);
 
 int main(int argc, char **argv) {
   Mat frame, output;
@@ -91,6 +93,7 @@ int main(int argc, char **argv) {
     int nonzerox[frame.rows*frame.cols];
     int nonzeroy[frame.rows*frame.cols];
     int nonzero_count = 0;
+
     for (int i = 0; i < frame.rows; i++)
       for (int j = 0; j < frame.cols; j++){
         if (frame.at<uchar>(i,j) == 255){
@@ -105,6 +108,10 @@ int main(int argc, char **argv) {
     int leftx_current, rightx_current;
     leftx_current = leftx_base;
     rightx_current = rightx_base;
+    vector<Point> left_lane_inds;// Put here for concate with all windows
+    vector<Point> right_lane_inds;// Put here for concate with all windows
+    double leftx[8000], lefty[6000], rightx[8000], righty[6000];
+    int count_nozeroleft = 0, count_nozeroright = 0;
 
     for (int i = 0; i < nwindows; i++){
       int win_y_low, win_y_high, win_xleft_low, win_xleft_high, win_xright_low, win_xright_high;
@@ -121,23 +128,28 @@ int main(int argc, char **argv) {
 
       //Identify the nonzero pixels in x and y within the window
       //Point left_lane_inds[1000], right_lane_inds[1000];
-      vector<Point> left_lane_inds;
       int count_left_inds = 0, count_right_inds = 0;
       long Sum_Left_x = 0, Sum_Right_x = 0;
+
       for (int i = win_y_high; i <= win_y_low; i++)
         for (int j = win_xleft_low; j <= win_xleft_high; j++){
           if (frame.at<uchar>(i,j) == 255){
             left_lane_inds.push_back(Point(i,j));
+            leftx[count_nozeroleft] = j;
+            lefty[count_nozeroleft] = i;
+            count_nozeroleft++;
             count_left_inds++;
             Sum_Left_x += j;
           }
         }
 
-      vector<Point> right_lane_inds;
       for (int i = win_y_high; i <= win_y_low; i++)
         for (int j = win_xright_low; j <= win_xright_high; j++){
           if (frame.at<uchar>(i,j) == 255){
             right_lane_inds.push_back(Point(i,j));
+            rightx[count_nozeroright] = j;
+            righty[count_nozeroright] = i;
+            count_nozeroright++;
             count_right_inds++;
             Sum_Right_x += j;
           }
@@ -147,13 +159,93 @@ int main(int argc, char **argv) {
       if (count_left_inds > minpix){
         leftx_current = Sum_Left_x / count_left_inds;
       }
+      if (count_right_inds > minpix){
+        rightx_current = Sum_Right_x / count_right_inds;
+      }
     }
+    //cout<<"OK here" << count_nozeroright << endl;
+    polyfit(leftx, lefty, count_nozeroleft, 2);
 
     imshow("frame", frame);
     if (waitKey(30) == 27)
       break;
   }
   return 0;
+}
+
+double *polyfit(double x[], double y[], int count, int degree){
+  int N = count, n = degree, i, j, k;
+  double X[2*n + 1];
+
+  for ( i = 0; i < 2*n + 1; i++){
+    X[i] = 0;
+    for ( j = 0; j < N; j++){
+      X[i] = X[i] + pow(x[j], i);
+    }
+  }
+
+  double B[n + 1][n + 2];
+  double a[ n + 1];
+  for ( i = 0; i <= n; i++){
+    for ( j = 0; j <= n; j++){
+      B[i][j] = X[i + j];
+    }
+  }
+
+  double Y[n + 1];
+  for ( i = 0; i <= n+1; i++){
+    Y[i] = 0;
+    for ( j = 0; j < N; j++){
+      Y[i] = Y[i] + pow(x[j], i) * y[j];
+    }
+  }
+  for ( i = 0; i <= n; i++){
+    B[i][n + 1] = Y[i];
+  }
+
+  n = n + 1;
+  cout<<"\nThe Normal(Augmented Matrix) is as follows:\n";
+    for (i=0;i<n;i++)            //print the Normal-augmented matrix
+    {
+        for (j=0;j<=n;j++)
+            cout<<B[i][j]<<" ";
+        cout<<"\n";
+    }
+
+    for (i=0;i<n;i++)                    //From now Gaussian Elimination starts(can be ignored) to solve the set of linear equations (Pivotisation)
+          for (k=i+1;k<n;k++)
+              if (B[i][i]<B[k][i])
+                  for (j=0;j<=n;j++)
+                  {
+                      double temp=B[i][j];
+                      B[i][j]=B[k][j];
+                      B[k][j]=temp;
+                  }
+
+      for (i=0;i<n-1;i++)            //loop to perform the gauss elimination
+          for (k=i+1;k<n;k++)
+              {
+                  double t= (B[k][i]) / (B[i][i]);
+                  for (j=0;j<=n;j++)
+                      B[k][j]=B[k][j]-t*B[i][j];    //make the elements below the pivot elements equal to zero or elimnate the variables
+              }
+
+              for (i=n-1;i>=0;i--)                //back-substitution
+            {                        //x is an array whose values correspond to the values of x,y,z..
+                a[i]=B[i][n];                //make the variable to be calculated equal to the rhs of the last equation
+                for (j=0;j<n;j++)
+                    if (j!=i)            //then subtract all the lhs values except the coefficient of the variable whose value                                   is being calculated
+                        a[i]=a[i]-B[i][j]*a[j];
+                a[i]= a[i]/ (B[i][i]);            //now finally divide the rhs by the coefficient of the variable to be calculated
+            }
+            cout<<"\nThe values of the coefficients are as follows:\n";
+            for (i=0;i<n;i++)
+                cout<<"x^"<<i<<"="<<a[i]<<endl;            // Print the values of x^0,x^1,x^2,x^3,....
+            cout<<"\nHence the fitted Polynomial is given by:\ny=";
+            for (i=0;i<n;i++)
+                cout<<" + ("<<a[i]<<")"<<"x^"<<i;
+            cout<<"\n";
+    return a;
 }
 
 Mat get_perspective(Mat frame, Mat src){
