@@ -62,7 +62,7 @@ double * getRandom( ) {
 
 int main(int argc, char **argv) {
   Mat frame;
-  double *fit = new double[10];
+  double *fit = new double[6];
   VideoCapture cap("../videos/clip1_FPT.mp4");
   if (!cap.isOpened())
     return -1;
@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
     cap >> frame;
 
     fit = sliding_window(frame);
+    cout <<"fififi" << fit[3];
 
     if (waitKey(30) == 27)
       break;
@@ -195,11 +196,17 @@ double *sliding_window(Mat frame){
   }
   //cout<<"OK here" << count_nozeroright << endl;
   double *temp1 = polyfit(leftx, lefty, count_nozeroleft, 2);
-  double *temp2;
+  double *temp2 = polyfit(rightx, righty, count_nozeroright, 2);
 
-  cout << temp2[1];
+  double *result = new double[6];
+  for (int i = 0; i < 3; i++)
+    result[i] = temp1[i];
+  for (int i = 0; i < 3; i++)
+      result[i + 3] = temp2[i];
+
+  cout <<"day la temp 1" << result[5];
   imshow("frame", frame);
-  return 0;
+  return result;
 }
 
 double *polyfit(double x[], double y[], int count, int degree){
@@ -214,7 +221,9 @@ double *polyfit(double x[], double y[], int count, int degree){
   }
 
   double B[n + 1][n + 2];
-  static double a[ n + 1]; // phai dung static de dia chi ko bi thay doi dan den segment fault
+  //voi khai bao a[] phai dung static de dia chi ko bi thay doi dan den segment fault
+  // con dung con tro phai new, (contro se co vi tri va return ve dung vi tri do)
+  double *a = new double[n+1];
   for ( i = 0; i <= n; i++){
     for ( j = 0; j <= n; j++){
       B[i][j] = X[i + j];
