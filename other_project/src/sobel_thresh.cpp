@@ -49,7 +49,7 @@ double *getRandom() {
 double *sliding_window(Mat frame) {
   Mat output;
 
-  resize(frame, frame, Size(1280, 720));
+  resize(frame, frame, Size(640, 320));
   GaussianBlur(frame, frame, Size(3, 3), 0, 0, BORDER_DEFAULT);
   cvtColor(frame, frame, CV_BGR2GRAY, 1);
 
@@ -64,7 +64,7 @@ double *sliding_window(Mat frame) {
   frame = get_perspective(frame, output);
   int histogram[1200] = {0};
 
-  for (int i = 0; i < 1080; i++) {
+  for (int i = 0; i < frame.cols; i++) {
     for (int j = frame.rows / 2; j < frame.rows; j++) {
       if (frame.at<uchar>(j, i) == 255) {
         histogram[i]++;
@@ -73,7 +73,7 @@ double *sliding_window(Mat frame) {
   }
   int leftx_base, rightx_base, max = 0;
   // Get left base
-  for (int i = 0; i < 1080 / 2; i++) {
+  for (int i = 0; i < frame.cols / 2; i++) {
     if (max < histogram[i]) {
       max = histogram[i];
       leftx_base = i;
@@ -82,7 +82,7 @@ double *sliding_window(Mat frame) {
 
   // Get right base
   max = 0;
-  for (int i = 1080 / 2; i < 1080; i++) {
+  for (int i = frame.cols / 2; i < frame.cols; i++) {
     if (max < histogram[i]) {
       max = histogram[i];
       rightx_base = i;
@@ -102,8 +102,8 @@ double *sliding_window(Mat frame) {
       }
     }
 
-  int margin = 50;
-  int minpix = 50;
+  int margin = 35;
+  int minpix = 35;
   int leftx_current, rightx_current;
   leftx_current = leftx_base;
   rightx_current = rightx_base;
@@ -277,7 +277,7 @@ Mat get_perspective(Mat frame, Mat src) {
   Rect roi;
   roi.x = 100;
   roi.y = frame.rows / 1.9;
-  roi.width = 1280 - 2 * 100;
+  roi.width = 640 - 2 * 100;
   roi.height = frame.rows - roi.y;
 
   Mat crop_img;
