@@ -4,7 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/fxanhkhoa/ITCar_Camera/other_project/src/sobel_thresh.cpp" "/home/fxanhkhoa/ITCar_Camera/other_project/CMakeFiles/sobel.dir/src/sobel_thresh.cpp.o"
+  "/home/fxanhkhoa/ITCar_Camera/other_project/src/main.cpp" "/home/fxanhkhoa/ITCar_Camera/other_project/CMakeFiles/main.dir/src/main.cpp.o"
+  "/home/fxanhkhoa/ITCar_Camera/other_project/src/sobel_thresh.cpp" "/home/fxanhkhoa/ITCar_Camera/other_project/CMakeFiles/main.dir/src/sobel_thresh.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

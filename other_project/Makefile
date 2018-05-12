@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /home/fxanhkhoa/ITCar_Camera/other_project
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
-
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -77,6 +66,17 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
+
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -111,17 +111,44 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named sobel
+# Target rules for targets named main
 
 # Build rule for target.
-sobel: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 sobel
-.PHONY : sobel
+main: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 main
+.PHONY : main
 
 # fast build rule for target.
-sobel/fast:
-	$(MAKE) -f CMakeFiles/sobel.dir/build.make CMakeFiles/sobel.dir/build
-.PHONY : sobel/fast
+main/fast:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
+.PHONY : main/fast
+
+src/main.o: src/main.cpp.o
+
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.cpp.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
+
+src/main.i: src/main.cpp.i
+
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.cpp.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
+
+src/main.s: src/main.cpp.s
+
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.cpp.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
 src/sobel_thresh.o: src/sobel_thresh.cpp.o
 
@@ -129,7 +156,7 @@ src/sobel_thresh.o: src/sobel_thresh.cpp.o
 
 # target to build an object file
 src/sobel_thresh.cpp.o:
-	$(MAKE) -f CMakeFiles/sobel.dir/build.make CMakeFiles/sobel.dir/src/sobel_thresh.cpp.o
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/sobel_thresh.cpp.o
 .PHONY : src/sobel_thresh.cpp.o
 
 src/sobel_thresh.i: src/sobel_thresh.cpp.i
@@ -138,7 +165,7 @@ src/sobel_thresh.i: src/sobel_thresh.cpp.i
 
 # target to preprocess a source file
 src/sobel_thresh.cpp.i:
-	$(MAKE) -f CMakeFiles/sobel.dir/build.make CMakeFiles/sobel.dir/src/sobel_thresh.cpp.i
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/sobel_thresh.cpp.i
 .PHONY : src/sobel_thresh.cpp.i
 
 src/sobel_thresh.s: src/sobel_thresh.cpp.s
@@ -147,7 +174,7 @@ src/sobel_thresh.s: src/sobel_thresh.cpp.s
 
 # target to generate assembly for a file
 src/sobel_thresh.cpp.s:
-	$(MAKE) -f CMakeFiles/sobel.dir/build.make CMakeFiles/sobel.dir/src/sobel_thresh.cpp.s
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/sobel_thresh.cpp.s
 .PHONY : src/sobel_thresh.cpp.s
 
 # Help Target
@@ -156,9 +183,12 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... sobel"
+	@echo "... edit_cache"
+	@echo "... main"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
 	@echo "... src/sobel_thresh.o"
 	@echo "... src/sobel_thresh.i"
 	@echo "... src/sobel_thresh.s"
